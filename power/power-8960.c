@@ -48,10 +48,12 @@
 #include "performance.h"
 #include "power-common.h"
 
+#define PROFILE_MAX 3
+
 static int current_power_profile = PROFILE_BALANCED;
 
 int get_number_of_profiles() {
-    return 3;
+    return PROFILE_MAX;
 }
 
 #define BUFFER_LENGTH 80
@@ -155,7 +157,7 @@ static power_profile profiles[PROFILE_MAX] = {
         .ondemand_ignore_nice_load = 0,
         .ondemand_input_boost = 0,
         .ondemand_io_is_busy = 0,
-        .ondemand_optimal_freq 918000,
+        .ondemand_optimal_freq = 918000,
         .ondemand_powersave_bias = 0,
         .ondemand_sampling_down_factor = 4,
         .ondemand_sampling_early_factor = 1,
@@ -185,7 +187,7 @@ static power_profile profiles[PROFILE_MAX] = {
         .ondemand_ignore_nice_load = 0,
         .ondemand_input_boost = 0,
         .ondemand_io_is_busy = 0,
-        .ondemand_optimal_freq 918000,
+        .ondemand_optimal_freq = 918000,
         .ondemand_powersave_bias = 0,
         .ondemand_sampling_down_factor = 4,
         .ondemand_sampling_early_factor = 1,
@@ -214,7 +216,7 @@ static power_profile profiles[PROFILE_MAX] = {
         .interactive_boostpulse = 1134000,
         .interactive_boostpulse_duration = 40,
         .interactive_go_hispeed_load = 95,
-        .interactive_hispeed_freq 1134000,
+        .interactive_hispeed_freq = 1134000,
         .interactive_io_is_busy = 1,
         .interactive_max_freq_hysteresis = 100000,
         .interactive_min_sample_time = 80000,
