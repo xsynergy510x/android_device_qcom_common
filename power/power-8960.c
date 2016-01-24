@@ -267,13 +267,13 @@ static void set_power_profile(int profile) {
                         profiles[profile].cpu3_scaling_gov);
 
 	// Set max frequency
-        sysfs_write_str(CPU0_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU0_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu0_scaling_max_freq);
-        sysfs_write_str(CPU1_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU1_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu1_scaling_max_freq);
-        sysfs_write_str(CPU2_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU2_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu2_scaling_max_freq);
-        sysfs_write_str(CPU3_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU3_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu3_scaling_max_freq);
 
 	// Set governor parameters
@@ -322,13 +322,13 @@ static void set_power_profile(int profile) {
                         profiles[profile].cpu3_scaling_gov);
 
         // Set max frequency
-        sysfs_write_str(CPU0_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU0_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu0_scaling_max_freq);
-        sysfs_write_str(CPU1_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU1_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu1_scaling_max_freq);
-        sysfs_write_str(CPU2_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU2_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu2_scaling_max_freq);
-        sysfs_write_str(CPU3_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU3_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu3_scaling_max_freq);
 
         // Set governor parameters
@@ -391,13 +391,13 @@ static void set_power_profile(int profile) {
                         profiles[profile].cpu3_scaling_gov);
 
         // Set max frequency
-        sysfs_write_str(CPU0_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU0_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu0_scaling_max_freq);
-        sysfs_write_str(CPU1_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU1_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu1_scaling_max_freq);
-        sysfs_write_str(CPU2_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU2_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu2_scaling_max_freq);
-        sysfs_write_str(CPU3_CPUFREQ_PATH "scaling_max_freq",
+        sysfs_write_int(CPU3_CPUFREQ_PATH "scaling_max_freq",
                         profiles[profile].cpu3_scaling_max_freq);
 
         // Set governor parameters
