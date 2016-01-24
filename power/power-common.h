@@ -28,16 +28,22 @@
  */
 #define NODE_MAX (64)
 
-#define SCALING_GOVERNOR_PATH "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
 #define DCVS_CPU0_SLACK_MAX_NODE "/sys/module/msm_dcvs/cores/cpu0/slack_time_max_us"
 #define DCVS_CPU0_SLACK_MIN_NODE "/sys/module/msm_dcvs/cores/cpu0/slack_time_min_us"
 #define MPDECISION_SLACK_MAX_NODE "/sys/module/msm_mpdecision/slack_time_max_us"
 #define MPDECISION_SLACK_MIN_NODE "/sys/module/msm_mpdecision/slack_time_min_us"
-#define SCALING_MIN_FREQ "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq"
 
 #define ONDEMAND_GOVERNOR "ondemand"
 #define INTERACTIVE_GOVERNOR "interactive"
 #define MSMDCVS_GOVERNOR "msm-dcvs"
+
+#define INTERACTIVE_PATH "/sys/devices/system/cpu/cpufreq/interactive/"
+#define ONDEMAND_PATH "/sys/devices/system/cpu/cpufreq/ondemand/"
+
+#define CPU0_CPUFREQ_PATH "/sys/devices/system/cpu/cpu0/cpufreq/"
+#define CPU1_CPUFREQ_PATH "/sys/devices/system/cpu/cpu1/cpufreq/"
+#define CPU2_CPUFREQ_PATH "/sys/devices/system/cpu/cpu2/cpufreq/"
+#define CPU3_CPUFREQ_PATH "/sys/devices/system/cpu/cpu3/cpufreq/"
 
 #define HINT_HANDLED (0)
 #define HINT_NONE (-1)

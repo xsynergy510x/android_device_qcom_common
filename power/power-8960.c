@@ -56,43 +56,180 @@ int get_number_of_profiles() {
     return 3;
 }
 
-static int is_target_8064() /* Returns value=8064 if target is 8064 else value 0 */
+#define BUFFER_LENGTH 80
+
+static int sysfs_write_str(char *path, char *s)
 {
+    char buf[BUFFER_LENGTH];
+    int len;
+    int ret = 0;
     int fd;
-    char buf[10] = {0};
 
-    if (is_8064 >= 0)
-        return is_8064;
-
-    fd = open("/sys/devices/system/soc/soc0/id", O_RDONLY);
-    if (fd >= 0) {
-        if (read(fd, buf, sizeof(buf) - 1) == -1) {
-            ALOGW("Unable to read soc_id");
-            is_8064 = 0;
-        } else {
-            int soc_id = atoi(buf);
-            if (soc_id == 153)  {
-                is_8064 = 8064;
-            }
-        }
+    fd = open(path, O_WRONLY);
+    if (fd < 0) {
+        strerror_r(errno, buf, sizeof(buf));
+        ALOGE("Error opening %s: %s\n", path, buf);
+        return -1 ;
     }
+
+    len = write(fd, s, strlen(s));
+    if (len < 0) {
+        strerror_r(errno, buf, sizeof(buf));
+        ALOGE("Error writing to %s: %s\n", path, buf);
+        ret = -1;
+    }
+
     close(fd);
-    return is_8064;
+
+    return ret;
 }
 
-static int profile_high_performance_8960[3] = {
-    CPUS_ONLINE_MIN_2,
-    CPU0_MIN_FREQ_TURBO_MAX, CPU1_MIN_FREQ_TURBO_MAX
+static int sysfs_write_int(char *path, int value)
+{
+    char buf[BUFFER_LENGTH];
+    snprintf(buf, BUFFER_LENGTH, "%d", value);
+    return sysfs_write_str(path, buf);
+}
+
+typedef struct governor_settings {
+    // CPU settings
+    char *cpu0_scaling_gov;
+    char *cpu1_scaling_gov;
+    char *cpu2_scaling_gov;
+    char *cpu3_scaling_gov;
+    int cpu0_scaling_max_freq;
+    int cpu1_scaling_max_freq;
+    int cpu2_scaling_max_freq;
+    int cpu3_scaling_max_freq;
+
+    // Interactive
+    char *interactive_above_hispeed_delay;
+    int interactive_align_windows;
+    int interactive_boost;
+    int interactive_boostpulse;
+    int interactive_boostpulse_duration;
+    int interactive_go_hispeed_load;
+    int interactive_hispeed_freq;
+    int interactive_io_is_busy;
+    int interactive_max_freq_hysteresis;
+    int interactive_min_sample_time;
+    char *interactive_target_loads;
+    int interactive_timer_rate;
+    int interactive_timer_slack;
+
+    // Ondemand
+    int ondemand_down_differential;
+    int ondemand_down_differential_multi_core;
+    int ondemand_enable_turbo_mode;
+    int ondemand_freq_step;
+    int ondemand_ignore_nice_load;
+    int ondemand_input_boost;
+    int ondemand_io_is_busy;
+    int ondemand_optimal_freq;
+    int ondemand_powersave_bias;
+    int ondemand_sampling_down_factor;
+    int ondemand_sampling_early_factor;
+    int ondemand_sampling_interim_factor;
+    int ondemand_sampling_rate;
+    int ondemand_sampling_rate_min;
+    int ondemand_step_up_early_hispeed;
+    int ondemand_step_up_interim_hispeed;
+    int ondemand_sync_freq;
+    int ondemand_up_threshold;
+    int ondemand_up_threshold_any_cpu_load;
+    int ondemand_up_threshold_multi_core;
+} power_profile;
+
+static power_profile profiles[PROFILE_MAX] = {
+    [PROFILE_POWER_SAVE] = {
+        .cpu0_scaling_gov = ONDEMAND_GOVERNOR;
+        .cpu1_scaling_gov = ONDEMAND_GOVERNOR;
+        .cpu2_scaling_gov = ONDEMAND_GOVERNOR;
+        .cpu3_scaling_gov = ONDEMAND_GOVERNOR;
+        .cpu0_scaling_max_freq = 1350000;
+        .cpu1_scaling_max_freq = 1350000;
+        .cpu2_scaling_max_freq = 1350000;
+        .cpu3_scaling_max_freq = 1350000;
+        .ondemand_down_differential = 10;
+        .ondemand_down_differential_multi_core = 3;
+        .ondemand_enable_turbo_mode = 0;
+        .ondemand_freq_step = 25;
+        .ondemand_ignore_nice_load = 0;
+        .ondemand_input_boost = 0;
+        .ondemand_io_is_busy = 0;
+        .ondemand_optimal_freq 918000;
+        .ondemand_powersave_bias = 0;
+        .ondemand_sampling_down_factor = 4;
+        .ondemand_sampling_early_factor = 1;
+        .ondemand_sampling_interim_factor = 1;
+        .ondemand_sampling_rate = 50000;
+        .ondemand_sampling_rate_min = 10000;
+        .ondemand_step_up_early_hispeed = 1134000;
+        .ondemand_step_up_interim_hispeed = 1134000;
+        .ondemand_sync_freq = 1026000;
+        .ondemand_up_threshold = 90;
+        .ondemand_up_threshold_any_cpu_load = 80;
+        .ondemand_up_threshold_multi_core = 70;
+    },
+    [PROFILE_BALANCED] = {
+        .cpu0_scaling_gov = ONDEMAND_GOVERNOR;
+        .cpu1_scaling_gov = ONDEMAND_GOVERNOR;
+        .cpu2_scaling_gov = ONDEMAND_GOVERNOR;
+        .cpu3_scaling_gov = ONDEMAND_GOVERNOR;
+        .cpu0_scaling_max_freq = 1674000;
+        .cpu1_scaling_max_freq = 1458000;
+        .cpu2_scaling_max_freq = 1458000;
+        .cpu3_scaling_max_freq = 1458000;
+        .ondemand_down_differential = 10;
+        .ondemand_down_differential_multi_core = 3;
+        .ondemand_enable_turbo_mode = 0;
+        .ondemand_freq_step = 25;
+        .ondemand_ignore_nice_load = 0;
+        .ondemand_input_boost = 0;
+        .ondemand_io_is_busy = 0;
+        .ondemand_optimal_freq 918000;
+        .ondemand_powersave_bias = 0;
+        .ondemand_sampling_down_factor = 4;
+        .ondemand_sampling_early_factor = 1;
+        .ondemand_sampling_interim_factor = 1;
+        .ondemand_sampling_rate = 50000;
+        .ondemand_sampling_rate_min = 10000;
+        .ondemand_step_up_early_hispeed = 1134000;
+        .ondemand_step_up_interim_hispeed = 1134000;
+        .ondemand_sync_freq = 1026000;
+        .ondemand_up_threshold = 90;
+        .ondemand_up_threshold_any_cpu_load = 80;
+        .ondemand_up_threshold_multi_core = 70;
+    },
+    [PROFILE_HIGH_PERFORMANCE] = {
+        .cpu0_scaling_gov = INTERACTIVE_GOVERNOR;
+        .cpu1_scaling_gov = INTERACTIVE_GOVERNOR;
+        .cpu2_scaling_gov = INTERACTIVE_GOVERNOR;
+        .cpu3_scaling_gov = INTERACTIVE_GOVERNOR;
+        .cpu0_scaling_max_freq = 1890000;
+        .cpu1_scaling_max_freq = 1890000;
+        .cpu2_scaling_max_freq = 1890000;
+        .cpu3_scaling_max_freq = 1890000;
+        .interactive_above_hispeed_delay = "20000 1400000:40000 1800000:20000";
+        .interactive_align_windows = 1;
+        .interactive_boost = 1;
+        .interactive_boostpulse = 1134000;
+        .interactive_boostpulse_duration = 40;
+        .interactive_go_hispeed_load = 95;
+        .interactive_hispeed_freq 1134000;
+        .interactive_io_is_busy = 1;
+        .interactive_max_freq_hysteresis = 100000;
+        .interactive_min_sample_time = 80000;
+        .interactive_target_loads = "85 1350000:90 1800000:99";
+        .interactive_timer_rate = 30000;
+        .interactive_timer_slack = 80000;
+    },
 };
 
 static int profile_high_performance_8064[5] = {
     CPUS_ONLINE_MIN_4,
     CPU0_MIN_FREQ_TURBO_MAX, CPU1_MIN_FREQ_TURBO_MAX,
     CPU2_MIN_FREQ_TURBO_MAX, CPU3_MIN_FREQ_TURBO_MAX
-};
-
-static int profile_power_save_8960[2] = {
-    CPU0_MAX_FREQ_NONTURBO_MAX, CPU1_MAX_FREQ_NONTURBO_MAX
 };
 
 static int profile_power_save_8064[5] = {
@@ -114,19 +251,198 @@ static void set_power_profile(int profile) {
     }
 
     if (profile == PROFILE_HIGH_PERFORMANCE) {
-        int *resource_values = is_target_8064() ?
-            profile_high_performance_8064 : profile_high_performance_8960;
+        int *resource_values = profile_high_performance_8064;
 
         perform_hint_action(DEFAULT_PROFILE_HINT_ID,
             resource_values, sizeof(resource_values)/sizeof(resource_values[0]));
+        
+	// Set scaling governor
+	sysfs_write_str(CPU0_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu0_scaling_gov);
+        sysfs_write_str(CPU1_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu1_scaling_gov);
+        sysfs_write_str(CPU2_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu2_scaling_gov);
+        sysfs_write_str(CPU3_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu3_scaling_gov);
+
+	// Set max frequency
+        sysfs_write_str(CPU0_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu0_scaling_max_freq);
+        sysfs_write_str(CPU1_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu1_scaling_max_freq);
+        sysfs_write_str(CPU2_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu2_scaling_max_freq);
+        sysfs_write_str(CPU3_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu3_scaling_max_freq);
+
+	// Set governor parameters
+        sysfs_write_str(INTERACTIVE_PATH "above_hispeed_delay",
+            		profiles[profile].interactive_above_hispeed_delay);
+        sysfs_write_int(INTERACTIVE_PATH "align_windows",
+            		profiles[profile].interactive_align_windows);
+        sysfs_write_int(INTERACTIVE_PATH "boost",
+            		profiles[profile].interactive_boost);
+        sysfs_write_int(INTERACTIVE_PATH "boostpulse",
+            		profiles[profile].interactive_boostpulse);
+        sysfs_write_int(INTERACTIVE_PATH "boostpulse_duration",
+            		profiles[profile].interactive_boostpulse_duration);
+        sysfs_write_int(INTERACTIVE_PATH "go_hispeed_load",
+            		profiles[profile].interactive_go_hispeed_load);
+        sysfs_write_int(INTERACTIVE_PATH "hispeed_freq",
+            		profiles[profile].interactive_hispeed_freq);
+        sysfs_write_int(INTERACTIVE_PATH "io_is_busy",
+            		profiles[profile].interactive_io_is_busy);
+        sysfs_write_int(INTERACTIVE_PATH "max_freq_hysteresis",
+            		profiles[profile].interactive_max_freq_hysteresis);
+        sysfs_write_int(INTERACTIVE_PATH "min_sample_time",
+            		profiles[profile].interactive_min_sample_time);
+        sysfs_write_str(INTERACTIVE_PATH "target_loads",
+            		profiles[profile].interactive_target_loads);
+        sysfs_write_int(INTERACTIVE_PATH "timer_rate",
+            		profiles[profile].interactive_timer_rate);
+        sysfs_write_int(INTERACTIVE_PATH "timer_slack",
+            		profiles[profile].interactive_timer_slack);
+
         ALOGD("%s: set performance mode", __func__);
-    } else if (profile == PROFILE_POWER_SAVE) {
-        int* resource_values = is_target_8064() ?
-            profile_power_save_8064 : profile_power_save_8960;
+    } else if (profile == PROFILE_BALANCED) {
+        int *resource_values = profile_high_performance_8064;
 
         perform_hint_action(DEFAULT_PROFILE_HINT_ID,
             resource_values, sizeof(resource_values)/sizeof(resource_values[0]));
-        ALOGD("%s: set powersave", __func__);
+
+	// Set scaling governor
+        sysfs_write_str(CPU0_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu0_scaling_gov);
+        sysfs_write_str(CPU1_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu1_scaling_gov);
+        sysfs_write_str(CPU2_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu2_scaling_gov);
+        sysfs_write_str(CPU3_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu3_scaling_gov);
+
+        // Set max frequency
+        sysfs_write_str(CPU0_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu0_scaling_max_freq);
+        sysfs_write_str(CPU1_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu1_scaling_max_freq);
+        sysfs_write_str(CPU2_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu2_scaling_max_freq);
+        sysfs_write_str(CPU3_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu3_scaling_max_freq);
+
+        // Set governor parameters
+	sysfs_write_int(ONDEMAND_PATH "down_differential",
+                        profiles[profile].ondemand_down_differential);
+        sysfs_write_int(ONDEMAND_PATH "down_differential_multi_core",
+                        profiles[profile].ondemand_down_differential_multi_core);
+        sysfs_write_int(ONDEMAND_PATH "enable_turbo_mode",
+                        profiles[profile].ondemand_enable_turbo_mode);
+        sysfs_write_int(ONDEMAND_PATH "freq_step",
+                        profiles[profile].ondemand_freq_step);
+        sysfs_write_int(ONDEMAND_PATH "ignore_nice_load",
+                        profiles[profile].ondemand_ignore_nice_load);
+        sysfs_write_int(ONDEMAND_PATH "input_boost",
+                        profiles[profile].ondemand_input_boost);
+        sysfs_write_int(ONDEMAND_PATH "io_is_busy",
+                        profiles[profile].ondemand_io_is_busy);
+        sysfs_write_int(ONDEMAND_PATH "optimal_freq",
+                        profiles[profile].ondemand_optimal_freq);
+        sysfs_write_int(ONDEMAND_PATH "powersave_bias",
+                        profiles[profile].ondemand_powersave_bias);
+        sysfs_write_int(ONDEMAND_PATH "sampling_down_factor",
+                        profiles[profile].ondemand_sampling_down_factor);
+        sysfs_write_int(ONDEMAND_PATH "sampling_early_factor",
+                        profiles[profile].ondemand_sampling_early_factor);
+        sysfs_write_int(ONDEMAND_PATH "sampling_interim_factor",
+                        profiles[profile].ondemand_sampling_interim_factor);
+        sysfs_write_int(ONDEMAND_PATH "sampling_rate",
+                        profiles[profile].ondemand_sampling_rate);
+        sysfs_write_int(ONDEMAND_PATH "sampling_rate_min",
+                        profiles[profile].ondemand_sampling_rate_min);
+        sysfs_write_int(ONDEMAND_PATH "step_up_early_hispeed",
+                        profiles[profile].ondemand_step_up_early_hispeed);
+        sysfs_write_int(ONDEMAND_PATH "step_up_interim_hispeed",
+                        profiles[profile].ondemand_step_up_interim_hispeed);
+        sysfs_write_int(ONDEMAND_PATH "sync_freq",
+                        profiles[profile].ondemand_sync_freq);
+        sysfs_write_int(ONDEMAND_PATH "up_threshold",
+                        profiles[profile].ondemand_up_threshold);
+        sysfs_write_int(ONDEMAND_PATH "up_threshold_any_cpu_load",
+                        profiles[profile].ondemand_up_threshold_any_cpu_load);
+        sysfs_write_int(ONDEMAND_PATH "up_threshold_multi_core",
+                        profiles[profile].ondemand_up_threshold_multi_core);
+
+        ALOGD("%s: set balanced mode", __func__);
+    } else if (profile == PROFILE_POWER_SAVE) {
+        int* resource_values = profile_power_save_8064;
+
+        perform_hint_action(DEFAULT_PROFILE_HINT_ID,
+            resource_values, sizeof(resource_values)/sizeof(resource_values[0]));
+
+	// Set scaling governor
+        sysfs_write_str(CPU0_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu0_scaling_gov);
+        sysfs_write_str(CPU1_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu1_scaling_gov);
+        sysfs_write_str(CPU2_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu2_scaling_gov);
+        sysfs_write_str(CPU3_CPUFREQ_PATH "scaling_governor",
+                        profiles[profile].cpu3_scaling_gov);
+
+        // Set max frequency
+        sysfs_write_str(CPU0_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu0_scaling_max_freq);
+        sysfs_write_str(CPU1_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu1_scaling_max_freq);
+        sysfs_write_str(CPU2_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu2_scaling_max_freq);
+        sysfs_write_str(CPU3_CPUFREQ_PATH "scaling_max_freq",
+                        profiles[profile].cpu3_scaling_max_freq);
+
+        // Set governor parameters
+	sysfs_write_int(ONDEMAND_PATH "down_differential",
+                        profiles[profile].ondemand_down_differential);
+        sysfs_write_int(ONDEMAND_PATH "down_differential_multi_core",
+                        profiles[profile].ondemand_down_differential_multi_core);
+        sysfs_write_int(ONDEMAND_PATH "enable_turbo_mode",
+                        profiles[profile].ondemand_enable_turbo_mode);
+        sysfs_write_int(ONDEMAND_PATH "freq_step",
+                        profiles[profile].ondemand_freq_step);
+        sysfs_write_int(ONDEMAND_PATH "ignore_nice_load",
+                        profiles[profile].ondemand_ignore_nice_load);
+        sysfs_write_int(ONDEMAND_PATH "input_boost",
+                        profiles[profile].ondemand_input_boost);
+        sysfs_write_int(ONDEMAND_PATH "io_is_busy",
+                        profiles[profile].ondemand_io_is_busy);
+        sysfs_write_int(ONDEMAND_PATH "optimal_freq",
+                        profiles[profile].ondemand_optimal_freq);
+        sysfs_write_int(ONDEMAND_PATH "powersave_bias",
+                        profiles[profile].ondemand_powersave_bias);
+        sysfs_write_int(ONDEMAND_PATH "sampling_down_factor",
+                        profiles[profile].ondemand_sampling_down_factor);
+        sysfs_write_int(ONDEMAND_PATH "sampling_early_factor",
+                        profiles[profile].ondemand_sampling_early_factor);
+        sysfs_write_int(ONDEMAND_PATH "sampling_interim_factor",
+                        profiles[profile].ondemand_sampling_interim_factor);
+        sysfs_write_int(ONDEMAND_PATH "sampling_rate",
+                        profiles[profile].ondemand_sampling_rate);
+        sysfs_write_int(ONDEMAND_PATH "sampling_rate_min",
+                        profiles[profile].ondemand_sampling_rate_min);
+        sysfs_write_int(ONDEMAND_PATH "step_up_early_hispeed",
+                        profiles[profile].ondemand_step_up_early_hispeed);
+        sysfs_write_int(ONDEMAND_PATH "step_up_interim_hispeed",
+                        profiles[profile].ondemand_step_up_interim_hispeed);
+        sysfs_write_int(ONDEMAND_PATH "sync_freq",
+                        profiles[profile].ondemand_sync_freq);
+        sysfs_write_int(ONDEMAND_PATH "up_threshold",
+                        profiles[profile].ondemand_up_threshold);
+        sysfs_write_int(ONDEMAND_PATH "up_threshold_any_cpu_load",
+                        profiles[profile].ondemand_up_threshold_any_cpu_load);
+        sysfs_write_int(ONDEMAND_PATH "up_threshold_multi_core",
+                        profiles[profile].ondemand_up_threshold_multi_core);
+
+        ALOGD("%s: set powersave mode", __func__);
     }
 
     current_power_profile = profile;
