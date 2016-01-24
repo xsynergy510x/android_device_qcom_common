@@ -50,41 +50,52 @@
 
 static int current_power_profile = PROFILE_BALANCED;
 
+static int is_8064 = -1;
+
 int get_number_of_profiles() {
     return 3;
 }
 
-/** 
- * High Performance profile
- * All cores online
- * Max freqency set
- */
+static int is_target_8064() /* Returns value=8064 if target is 8064 else value 0 */
+{
+    int fd;
+    char buf[10] = {0};
 
-static int profile_high_performance[5] = {
+    if (is_8064 >= 0)
+        return is_8064;
+
+    fd = open("/sys/devices/system/soc/soc0/id", O_RDONLY);
+    if (fd >= 0) {
+        if (read(fd, buf, sizeof(buf) - 1) == -1) {
+            ALOGW("Unable to read soc_id");
+            is_8064 = 0;
+        } else {
+            int soc_id = atoi(buf);
+            if (soc_id == 153)  {
+                is_8064 = 8064;
+            }
+        }
+    }
+    close(fd);
+    return is_8064;
+}
+
+static int profile_high_performance_8960[3] = {
+    CPUS_ONLINE_MIN_2,
+    CPU0_MIN_FREQ_TURBO_MAX, CPU1_MIN_FREQ_TURBO_MAX
+};
+
+static int profile_high_performance_8064[5] = {
     CPUS_ONLINE_MIN_4,
-    0x212, 0x312,
-    0x412, 0x512
+    CPU0_MIN_FREQ_TURBO_MAX, CPU1_MIN_FREQ_TURBO_MAX,
+    CPU2_MIN_FREQ_TURBO_MAX, CPU3_MIN_FREQ_TURBO_MAX
 };
 
-/**
- * Balanced profile
- * 4 cores in hotplug
- * 1.67GHz for CPU0, 1.45GHz for CPU1-3
- */
-
-static int profile_balanced[5] = {
-    CPUS_ONLINE_MAX_LIMIT_4,
-    0x1510, 0x160E,
-    0x170E, 0x180E
+static int profile_power_save_8960[2] = {
+    CPU0_MAX_FREQ_NONTURBO_MAX, CPU1_MAX_FREQ_NONTURBO_MAX
 };
 
-/**
- * High Performance profile
- * 2 cores in hotplug
- * 1.026GHz for CPU0-1
- */
-
-static int profile_power_save[5] = {
+static int profile_power_save_8064[5] = {
     CPUS_ONLINE_MAX_LIMIT_2,
     CPU0_MAX_FREQ_NONTURBO_MAX, CPU1_MAX_FREQ_NONTURBO_MAX,
     CPU2_MAX_FREQ_NONTURBO_MAX, CPU3_MAX_FREQ_NONTURBO_MAX
@@ -103,23 +114,19 @@ static void set_power_profile(int profile) {
     }
 
     if (profile == PROFILE_HIGH_PERFORMANCE) {
-        int *resource_values = profile_high_performance;
+        int *resource_values = is_target_8064() ?
+            profile_high_performance_8064 : profile_high_performance_8960;
 
         perform_hint_action(DEFAULT_PROFILE_HINT_ID,
             resource_values, sizeof(resource_values)/sizeof(resource_values[0]));
         ALOGD("%s: set performance mode", __func__);
-    } else if (profile == PROFILE_BALANCED) {
-        int* resource_values = profile_balanced;
-
-        perform_hint_action(DEFAULT_PROFILE_HINT_ID,
-            resource_values, sizeof(resource_values)/sizeof(resource_values[0]));
-        ALOGD("%s: set balanced mode", __func__);
     } else if (profile == PROFILE_POWER_SAVE) {
-        int* resource_values = profile_power_save;
+        int* resource_values = is_target_8064() ?
+            profile_power_save_8064 : profile_power_save_8960;
 
         perform_hint_action(DEFAULT_PROFILE_HINT_ID,
             resource_values, sizeof(resource_values)/sizeof(resource_values[0]));
-        ALOGD("%s: set powersave mode", __func__);
+        ALOGD("%s: set powersave", __func__);
     }
 
     current_power_profile = profile;
