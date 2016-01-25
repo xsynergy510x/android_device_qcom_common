@@ -232,6 +232,12 @@ static int profile_high_performance[5] = {
     CPU2_MIN_FREQ_TURBO_MAX, CPU3_MIN_FREQ_TURBO_MAX
 };
 
+static int profile_balanced[5] = {
+    CPUS_ONLINE_MAX_LIMIT_4,
+    CPU0_MIN_FREQ_TURBO_MAX, CPU1_MIN_FREQ_TURBO_MAX,
+    CPU2_MIN_FREQ_TURBO_MAX, CPU3_MIN_FREQ_TURBO_MAX
+};
+
 static int profile_power_save[5] = {
     CPUS_ONLINE_MAX_LIMIT_2,
     CPU0_MAX_FREQ_NONTURBO_MAX, CPU1_MAX_FREQ_NONTURBO_MAX,
@@ -306,7 +312,7 @@ static void set_power_profile(int profile) {
 
         ALOGD("%s: set performance mode", __func__);
     } else if (profile == PROFILE_BALANCED) {
-        int *resource_values = profile_high_performance;
+        int *resource_values = profile_balanced;
 
         perform_hint_action(DEFAULT_PROFILE_HINT_ID,
             resource_values, sizeof(resource_values)/sizeof(resource_values[0]));
